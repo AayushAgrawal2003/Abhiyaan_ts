@@ -7,7 +7,7 @@ import roslib; roslib.load_manifest(PKG)
 from turtlesim.srv import Spawn
 vel =  1
 flag = 0
-
+turtle_store = []
 rospy.init_node('turtle_bot')
 
 rospy.wait_for_service('spawn')
@@ -24,7 +24,7 @@ class New_turtle():
         self.x = x 
         self.y = y
         spawn_turtle(self.x,self.y,0,name)
-        self.move()
+        #self.move()
         
     def callback1(self,data):
         self.x = data.x
@@ -35,10 +35,10 @@ class New_turtle():
         self.rot = Twist()
         global count
         self.pub = rospy.Publisher(self.name + "/cmd_vel",Twist,queue_size = 1)
+        rospy.Subscriber(self.name + "/pose", Pose,self.callback1)
         #rospy.loginfo(self.name)
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
-            rospy.Subscriber(self.name + "/pose", Pose,self.callback1)
             if self.rot.linear.x == 0 or self.rot.linear.y ==0:
                 self.rot.linear.x = vel
                 self.rot.linear.y = vel
@@ -62,10 +62,13 @@ class New_turtle():
                     if self.rot.linear.x != vel or self.rot.linear.y != vel:
                         self.rot.linear.x = vel 
                         self.rot.linear.y = vel
-                if flag == 0:
-                    rospy.loginfo(flag)
+                if flag <= 2:
+                    #rospy.loginfo(flag)
                     flag +=1
-                    New_turtle(f"a{count}",self.x,self.y)
+                    turtle_store.append(New_turtle(f"a{count}",self.x,self.y))
+                    rospy.loginfo(flag)
+                    turtle_store[-1].move()
+                    
             self.pub.publish(self.rot)
             rate.sleep()
 
@@ -74,3 +77,4 @@ class New_turtle():
 
 
 t = New_turtle("a1",5,5)
+t.move()
